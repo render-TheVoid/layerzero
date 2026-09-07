@@ -42,6 +42,18 @@ export const DashboardLayout: React.FC = () => {
             <FileText className="h-4 w-4" />
             <span>Doc Summarizer</span>
           </NavLink>
+          <NavLink
+            to="/dashboard/account"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center space-x-3 px-4 py-2.5 rounded-full text-sm font-medium transition-all",
+                isActive ? "bg-secondary text-secondary-foreground font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )
+            }
+          >
+            <User className="h-4 w-4" />
+            <span>Account</span>
+          </NavLink>
         </nav>
         <div className="p-4 border-t border-border">
           <button
@@ -103,6 +115,18 @@ export const DashboardLayout: React.FC = () => {
         >
           <FileText className="h-5 w-5" />
           <span>Doc</span>
+        </NavLink>
+        <NavLink
+          to="/dashboard/account"
+          className={({ isActive }) =>
+            cn(
+              "flex flex-col items-center justify-center space-y-1 px-6 py-2 text-xs transition-colors font-medium",
+              isActive ? "text-foreground font-semibold" : "text-muted-foreground"
+            )
+          }
+        >
+          <User className="h-5 w-5" />
+          <span>Account</span>
         </NavLink>
         <button
           onClick={logout}

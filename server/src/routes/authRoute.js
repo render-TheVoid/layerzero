@@ -5,7 +5,9 @@ import {
     registerUser, 
     resendVerification, 
     verifyEmail, 
-    checkUser 
+    checkUser,
+    updateAccount,
+    deleteAccount 
 } from '../controllers/auth.js';
 import { protectRoute } from '../middlewares/authMiddleware.js';
 import { rateLimit } from '../middlewares/rateLimiter.js';
@@ -45,5 +47,19 @@ router.get(
 );
 
 router.post('/user/logout', logout);
+
+router.put(
+    '/user/update',
+    rateLimit(authLimiter),
+    protectRoute,
+    updateAccount
+);
+
+router.delete(
+    '/user/delete',
+    rateLimit(authLimiter),
+    protectRoute,
+    deleteAccount
+);
 
 export default router;

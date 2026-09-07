@@ -93,4 +93,79 @@ describe('Authentication test', () => {
         expect(logoutResponse.statusCode).toBe(200);
     });
 
+    test('PUT /api/auth/user/update - updates name and password', async () => {
+        await request(app).post('/api/auth/user/register').send(user);
+
+        const theUser = await User.findOne({ email: user.email });
+        theUser.isVerified = true;
+        await theUser.save();
+
+        const loginResponse = await request(app)
+            .post('/api/auth/user/login')
+            .send({ email: user.email, password: user.password });
+
+        const cookie = loginResponse.headers["set-cookie"][0].split(";")[0];
+
+        const updateResponse = await request(app)
+            .put('/api/auth/user/update')
+            .set("Cookie", cookie)
+            .send({
+                name: "Updated Name",
+                currentPassword: user.password,
+                newPassword: "newPassword@123"
+            });
+
+        expect(updateResponse.statusCode).toBe(200);
+
+        const updatedUser = await User.findOne({ email: user.email });
+        expect(updatedUser.name).toBe("Updated Name");
+        expect(await bcrypt.compare("newPassword@123", updatedUser.password)).toBe(true);
+    });
+
+    test('PUT /api/auth/user/update - requires current password for new password', async () => {
+        await request(app).post('/api/auth/user/register').send(user);
+
+        const theUser = await User.findOne({ email: user.email });
+        theUser.isVerified = true;
+        await theUser.save();
+
+        const loginResponse = await request(app)
+            .post('/api/auth/user/login')
+            .send({ email: user.email, password: user.password });
+
+        const cookie = loginResponse.headers["set-cookie"][0].split(";")[0];
+
+        const updateResponse = await request(app)
+            .put('/api/auth/user/update')
+            .set("Cookie", cookie)
+            .send({
+                newPassword: "newPassword@123"
+            });
+
+        expect(updateResponse.statusCode).toBe(400);
+    });
+
+    test('DELETE /api/auth/user/delete - deletes account', async () => {
+        await request(app).post('/api/auth/user/register').send(user);
+
+        const theUser = await User.findOne({ email: user.email });
+        theUser.isVerified = true;
+        await theUser.save();
+
+        const loginResponse = await request(app)
+            .post('/api/auth/user/login')
+            .send({ email: user.email, password: user.password });
+
+        const cookie = loginResponse.headers["set-cookie"][0].split(";")[0];
+
+        const deleteResponse = await request(app)
+            .delete('/api/auth/user/delete')
+            .set("Cookie", cookie);
+
+        expect(deleteResponse.statusCode).toBe(200);
+
+        const deletedUser = await User.findOne({ email: user.email });
+        expect(deletedUser).toBeNull();
+    });
+
 });
