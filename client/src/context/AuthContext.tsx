@@ -22,6 +22,8 @@ interface AuthContextType {
   login: (data: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => Promise<void>;
   register: (data: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => Promise<AuthResponse>;
   resendVerification: (email: string) => Promise<AuthResponse>;
+  updateAccount: (data: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => Promise<AuthResponse>;
+  deleteAccount: () => Promise<void>;
   logout: () => Promise<void>;
   checkUser: () => Promise<void>;
 }
@@ -69,8 +71,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
+  const updateAccount = async (data: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
+    const res = await api.put('/auth/user/update', data);
+    return res.data as AuthResponse;
+  };
+
+  const deleteAccount = async () => {
+    await api.delete('/auth/user/delete');
+    setUser(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, resendVerification, logout, checkUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, resendVerification, updateAccount, deleteAccount, logout, checkUser }}>
       {children}
     </AuthContext.Provider>
   );

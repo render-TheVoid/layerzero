@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { generateToken } from "../config/generateJWT.js";
-import { registerSchema, loginSchema } from "../validators/auth.validator.js";
+import { registerSchema, loginSchema, updateAccountSchema } from "../validators/auth.validator.js";
 import hashContent from "../utils/hashContent.js";
 import crypto from 'crypto';
 import { sendVerificationEmail } from "../services/nodemailer.js";
@@ -183,6 +183,109 @@ export const checkUser = async (req, res, next) => {
     return res.status(200).json(req.user);
   } catch (err) {
     err.customMessage = "Unable to check current user";
+    next(err);
+  }
+};
+
+export const updateAccount = async (req, res, next) => {
+  try {
+    const updateFields = updateAccountSchema.safeParse(req.body);
+
+    if (!updateFields.success) {
+      return res.status(400).json({
+        errors: updateFields.error.flatten().fieldErrors,
+      });
+    }
+
+    const { name, email, currentPassword, newPassword } = updateFields.data;
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (email && email !== user.email) {
+      const userExists = await User.findOne({ email });
+      if (userExists) {
+        return res.status(400).json({
+          success: false,
+          message: "This email is already in use!",
+        });
+      }
+      user.email = email;
+      user.isVerified = false;
+
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      user.verificationToken = hashContent(verificationToken);
+      user.verificationTokenExpires = Date.now() + 15 * 60 * 1000;
+
+      await user.save();
+
+      if (process.env.NODE_ENV !== 'test') {
+        await sendVerificationEmail(user.email, verificationToken);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Account updated. Verify your new email to continue.",
+      });
+    }
+
+    if (name) {
+      user.name = name;
+    }
+
+    if (newPassword) {
+      const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!passwordMatch) {
+        return res.status(400).json({
+          success: false,
+          message: "Current password is incorrect",
+        });
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Account updated successfully",
+    });
+
+  } catch (err) {
+    err.customMessage = "Some error occurred while updating the account!";
+    next(err);
+  }
+};
+
+export const deleteAccount = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    await User.findByIdAndDelete(user._id);
+
+    res.cookie("jwt", "", { maxAge: 0 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Account deleted successfully",
+    });
+
+  } catch (err) {
+    err.customMessage = "Some error occurred while deleting the account!";
     next(err);
   }
 };
