@@ -16,7 +16,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
       type="button"
       aria-label="Toggle theme"
       className={cn(
-        "h-9 w-9 rounded-full flex items-center justify-center border border-border bg-secondary text-foreground hover:bg-muted transition-colors cursor-pointer",
+        "h-8 w-8 rounded-[4px] flex items-center justify-center border border-border bg-secondary text-foreground hover:bg-muted transition-colors cursor-pointer",
         className
       )}
     >

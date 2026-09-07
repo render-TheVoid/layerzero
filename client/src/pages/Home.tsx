@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { Layers, Zap, Globe, FileText, Cpu, Sparkles, Languages, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Globe, FileText, Layers, Sparkles, Cpu, Languages } from 'lucide-react';
 
 const ScrollSection: React.FC<{ children: React.ReactNode, delayClass?: string }> = ({ children, delayClass = '' }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -17,184 +17,166 @@ const ScrollSection: React.FC<{ children: React.ReactNode, delayClass?: string }
       },
       { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
     );
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
+    if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
 
   return (
-    <div
-      ref={ref}
-      className={`scroll-reveal ${isVisible ? 'is-visible' : ''} ${delayClass}`}
-    >
+    <div ref={ref} className={`scroll-reveal ${isVisible ? 'is-visible' : ''} ${delayClass}`}>
       {children}
     </div>
   );
 };
 
+interface Feature {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+const features: Feature[] = [
+  { icon: <Globe className="h-4 w-4" />, title: "Web Scraping & Parsing", description: "Strips away noise, sidebars, and ads to extract clean editorial text from any website URL." },
+  { icon: <FileText className="h-4 w-4" />, title: "Document Processing", description: "Upload PDF or DOCX files directly. The structural parser maintains context across complex pages." },
+  { icon: <Layers className="h-4 w-4" />, title: "Gemini 3.5 Flash", description: "Cloud model optimized for deep context synthesis across extensive multi-page documents." },
+  { icon: <Sparkles className="h-4 w-4" />, title: "Groq GPT-OSS-120B", description: "Ultra-fast 120B open-weights inference powered by Groq LPU hardware." },
+  { icon: <Cpu className="h-4 w-4" />, title: "Gemma Local Inference", description: "On-device Gemma models for complete privacy without sending data outside your environment." },
+  { icon: <Languages className="h-4 w-4" />, title: "Sarvam Multilingual", description: "Native support for Hinglish and Indian regional languages without phrase loss." },
+];
+
 const Home: React.FC = () => {
   return (
     <div className="flex flex-col bg-background text-foreground font-sans">
-      {/* Vertically Balanced Hero Section */}
-      <section className="relative min-h-[calc(100vh-4rem)] flex items-center py-10 md:py-16 overflow-hidden px-6 md:px-12 border-b border-border">
-        {/* Soft Pastel Atmospheric Gradient Orbs */}
-        <div className="gradient-orb gradient-orb-peach w-[400px] h-[400px] top-[-60px] left-[-60px] -z-0" />
-        <div className="gradient-orb gradient-orb-sky w-[350px] h-[350px] top-[10%] right-[-40px] -z-0" />
-
-        <div className="container mx-auto max-w-6xl relative z-10 my-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-            {/* Left Column: Headline & Action */}
+      {/* Hero */}
+      <section className="rules-band border-b border-border flex flex-1 flex-col">
+        <div className="mx-auto max-w-[1100px] px-6 w-full flex flex-1 items-center py-10 md:py-14">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center w-full">
+            {/* Left: headline & action */}
             <div className="lg:col-span-7 flex flex-col items-start text-left">
-              <div className="inline-flex items-center space-x-2 bg-secondary text-secondary-foreground border border-border px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wider mb-4 animate-badge-pulse">
-                <Zap className="h-3.5 w-3.5" />
-                <span>layerzero v1.0 is live</span>
-              </div>
-              
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-heading font-light tracking-tight text-foreground mb-4 leading-[1.1] max-w-2xl">
-                Hybrid AI summarization for intelligent document & web workflows.
+              <p className="kicker mb-3">
+                01 / LAYERZERO — HYBRID SUMMARIZATION
+              </p>
+
+              <h1 className="text-4xl md:text-5xl font-heading font-medium tracking-tight text-foreground leading-[1.08] mb-4">
+                Hybrid AI summarization for intelligent document &amp; web workflows.
               </h1>
-              
-              <p className="text-sm md:text-base text-muted-foreground max-w-xl mb-6 leading-relaxed font-sans">
+
+              <p className="text-[15px] text-muted-foreground max-w-xl mb-6 leading-relaxed font-sans">
                 Extract, process, and summarize complex content from web pages and documents using cloud models (Gemini, Groq), local privacy engines (Gemma), or native multilingual pipelines (Sarvam).
               </p>
-              
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto mb-8">
-                <Button 
-                  asChild 
-                  size="lg" 
-                  className="h-11 px-8 text-base rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-all"
-                >
-                  <Link to="/register" className="flex items-center justify-center space-x-2">
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto mb-6">
+                <Button asChild className="h-10 px-6">
+                  <Link to="/register" className="inline-flex items-center gap-2">
                     <span>Get Started</span>
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  size="lg" 
-                  className="h-11 px-8 text-base rounded-full border-input text-foreground hover:bg-secondary transition-all"
-                >
-                  <Link to="/about">Platform Architecture</Link>
+                <Button asChild variant="outline" className="h-10 px-6">
+                  <Link to="/about">Platform Architecture ↗</Link>
                 </Button>
               </div>
 
-              <div className="pt-6 border-t border-border w-full flex flex-wrap gap-6 text-xs font-medium text-muted-foreground tracking-wider uppercase">
-                <div className="flex items-center"><CheckCircle2 className="mr-2 h-4 w-4 text-foreground" /> PDF & DOCX Parsing</div>
-                <div className="flex items-center"><CheckCircle2 className="mr-2 h-4 w-4 text-foreground" /> DOM Extraction</div>
-                <div className="flex items-center"><CheckCircle2 className="mr-2 h-4 w-4 text-foreground" /> 4 Model Engines</div>
+              <div className="w-full flex flex-wrap gap-x-7 gap-y-1.5 pt-4 border-t border-border">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">PDF &amp; DOCX PARSING</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">DOM EXTRACTION</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">4 MODEL ENGINES</span>
               </div>
             </div>
 
-            {/* Right Column: Compact Editorial Showcase Card */}
+            {/* Right: system readout */}
             <div className="lg:col-span-5 w-full">
-              <div className="editorial-card p-6 bg-card border border-border rounded-2xl relative shadow-sm">
-                <div className="gradient-orb gradient-orb-mint w-[180px] h-[180px] bottom-[-20px] right-[-20px] -z-0" />
+              <div className="border border-border bg-surface p-5">
                 <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="h-2 w-2 rounded-full bg-[#16a34a]" />
-                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Live Engine Routing</span>
-                  </div>
-                  <span className="text-[11px] font-mono text-muted-foreground">layerzero-core</span>
+                  <span className="kicker">LIVE / ENGINE ROUTING</span>
+                  <span className="w-1.5 h-1.5 bg-accent" />
                 </div>
 
-                <div className="space-y-3 text-left">
-                  <div className="p-3 rounded-xl bg-background border border-border">
-                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block mb-0.5">Provider</span>
-                    <span className="text-xs font-heading font-medium text-foreground">Groq GPT-OSS-120B</span>
+                <div className="space-y-3">
+                  <div>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground block mb-1">Provider</span>
+                    <span className="text-sm font-medium text-foreground">Groq GPT-OSS-120B</span>
                   </div>
-
-                  <div className="p-3 rounded-xl bg-background border border-border">
-                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block mb-0.5">Source Input</span>
-                    <span className="text-xs font-sans text-muted-foreground line-clamp-1">Financial Analysis Report Q3 2026.pdf</span>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-secondary border border-border">
-                    <span className="text-[11px] font-semibold text-foreground uppercase tracking-wider block mb-1.5">Executive Summary</span>
-                    <p className="text-xs text-muted-foreground font-sans leading-relaxed">
-                      Revenue grew 24% YoY driven by enterprise adoption. Margin expansion reached 32% with operational efficiency gains across all regional clusters.
-                    </p>
+                  <div>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground block mb-1">Source</span>
+                    <span className="text-sm text-muted-foreground">Financial Analysis Report Q3 2026.pdf</span>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="py-16 md:py-24 bg-background border-b border-border px-6 md:px-12 relative overflow-hidden">
-        <div className="gradient-orb gradient-orb-lavender w-[350px] h-[350px] bottom-0 right-0 -z-0" />
-        
-        <div className="container mx-auto max-w-6xl relative z-10">
-          <ScrollSection>
-            <div className="text-left mb-12 max-w-2xl">
-              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 block">Capabilities</span>
-              <h2 className="text-3xl md:text-4xl font-heading font-light text-foreground mb-3">Built for Editorial Precision</h2>
-              <p className="text-muted-foreground text-sm md:text-base font-sans">A modular system for extracting, structuring, and synthesizing dense information.</p>
-            </div>
-          </ScrollSection>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-            <FeatureCard 
-              icon={<Globe className="h-5 w-5 text-foreground" />}
-              title="Web Scraping & Parsing"
-              description="Strips away noise, sidebars, and ads to extract clean editorial text from any website URL."
-              delayClass="delay-50"
-            />
-            <FeatureCard 
-              icon={<FileText className="h-5 w-5 text-foreground" />}
-              title="Document Processing"
-              description="Upload PDF or DOCX files directly. Structural parser maintains context across complex pages."
-              delayClass="delay-100"
-            />
-            <FeatureCard 
-              icon={<Layers className="h-5 w-5 text-foreground" />}
-              title="Gemini 3.5 Flash"
-              description="Cloud model optimized for deep context synthesis across extensive multi-page documents."
-              delayClass="delay-150"
-            />
-            <FeatureCard 
-              icon={<Sparkles className="h-5 w-5 text-foreground" />}
-              title="Groq GPT-OSS-120B"
-              description="Ultra-fast 120B open weights inference powered by Groq LPU hardware."
-              delayClass="delay-200"
-            />
-            <FeatureCard 
-              icon={<Cpu className="h-5 w-5 text-foreground" />}
-              title="Gemma Local Inference"
-              description="On-device Gemma models for complete privacy without sending data outside your environment."
-              delayClass="delay-250"
-            />
-            <FeatureCard 
-              icon={<Languages className="h-5 w-5 text-foreground" />}
-              title="Sarvam Multilingual"
-              description="Native support for Hinglish and Indian regional languages without phrase loss."
-              delayClass="delay-300"
-            />
-          </div>
-        </div>
-      </section>
+                <div className="border-t border-border my-4" />
 
-      {/* Editorial Split CTA Section */}
-      <section className="py-16 md:py-24 px-6 md:px-12 bg-background relative overflow-hidden">
-        <div className="container mx-auto max-w-6xl relative z-10">
-          <ScrollSection>
-            <div className="editorial-card p-8 md:p-12 bg-card border border-border rounded-2xl relative overflow-hidden text-left">
-              <div className="gradient-orb gradient-orb-rose w-[300px] h-[300px] top-[-60px] right-[-60px] -z-0" />
-              
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-                <div className="lg:col-span-8">
-                  <span className="inline-block px-3.5 py-1 bg-secondary text-secondary-foreground rounded-full text-xs font-semibold uppercase tracking-wider mb-3">Hybrid Engine</span>
-                  <h2 className="text-3xl md:text-4xl font-heading font-light text-foreground mb-3">Experience layerzero</h2>
-                  <p className="text-muted-foreground max-w-xl text-sm md:text-base font-sans leading-relaxed">
-                    Seamless dispatch between local model execution and high-performance cloud providers tailored to your privacy requirements.
+                <div>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground block mb-1.5">Executive Summary</span>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Revenue grew 24% YoY driven by enterprise adoption. Margin expansion reached 32% with operational efficiency gains across all regional clusters.
                   </p>
                 </div>
-                <div className="lg:col-span-4 flex lg:justify-end">
-                  <Button asChild size="lg" className="rounded-full bg-primary text-primary-foreground hover:opacity-90 px-8 h-11 text-base">
-                    <Link to="/register">Get Started Now</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Capabilities */}
+      <section className="border-b border-border">
+        <div className="mx-auto max-w-[1100px] px-6 py-20 md:py-24">
+          <ScrollSection>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
+              <div className="md:col-span-4">
+                <p className="kicker">02 / CAPABILITIES</p>
+              </div>
+              <div className="md:col-span-8">
+                <h2 className="text-3xl md:text-4xl font-heading font-medium text-foreground mb-3">Built for Editorial Precision</h2>
+                <p className="text-muted-foreground text-base font-sans max-w-xl">
+                  A modular system for extracting, structuring, and synthesizing dense information from any source.
+                </p>
+              </div>
+            </div>
+          </ScrollSection>
+
+          <div className="md:ml-[33.333%] mt-12 border-t border-border">
+            {features.map((feature, index) => (
+              <ScrollSection key={feature.title} delayClass={`delay-${Math.min(index * 50, 300)}`}>
+                <div className="grid grid-cols-12 gap-x-6 py-6 border-b border-border items-start">
+                  <div className="col-span-1 pt-1">
+                    <span className="font-mono text-[10px] text-muted-foreground">0{index + 1}</span>
+                  </div>
+                  <div className="col-span-3">
+                    <div className="flex items-center">
+                      <span className="h-8 w-8 rounded-[4px] bg-secondary border border-border flex items-center justify-center text-foreground">
+                        {feature.icon}
+                      </span>
+                    </div>
+                    <span className="hidden md:block mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                      {titleLabel(feature.title)}
+                    </span>
+                  </div>
+                  <div className="col-span-8 md:col-span-8">
+                    <h3 className="text-lg font-heading font-medium mb-1.5 text-foreground">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed font-sans max-w-lg">{feature.description}</p>
+                  </div>
+                </div>
+              </ScrollSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section>
+        <div className="mx-auto max-w-[1100px] px-6 py-20 md:py-24">
+          <ScrollSection>
+            <div className="border-t border-border pt-10">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-end">
+                <div className="md:col-span-9">
+                  <p className="kicker mb-4">03 / CTA</p>
+                  <h2 className="text-3xl md:text-4xl font-heading font-medium text-foreground mb-3">Experience layerzero</h2>
+                  <p className="text-muted-foreground max-w-xl text-base font-sans leading-relaxed">
+                    Seamless dispatch between local model execution and high-performance cloud providers, tailored to your privacy requirements.
+                  </p>
+                </div>
+                <div className="md:col-span-3 flex md:justify-end">
+                  <Button asChild size="lg" className="px-8 h-11 text-base">
+                    <Link to="/register">Get Started ↗</Link>
                   </Button>
                 </div>
               </div>
@@ -206,27 +188,9 @@ const Home: React.FC = () => {
   );
 };
 
-interface FeatureCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  delayClass?: string;
+// Helper: mono meta label derived from title (used in feature rows)
+function titleLabel(title: string): string {
+  return title.replace(/[^a-zA-Z0-9 ]/g, '').toUpperCase().slice(0, 24);
 }
-
-const FeatureCard = ({ icon, title, description, delayClass }: FeatureCardProps) => {
-  return (
-    <ScrollSection delayClass={delayClass}>
-      <div className="editorial-card p-6 bg-card border border-border rounded-2xl hover:border-input transition-all h-full flex flex-col justify-between">
-        <div>
-          <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center mb-4">
-            {icon}
-          </div>
-          <h3 className="text-lg font-heading font-normal mb-2 text-foreground">{title}</h3>
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed font-sans">{description}</p>
-        </div>
-      </div>
-    </ScrollSection>
-  );
-};
 
 export default Home;

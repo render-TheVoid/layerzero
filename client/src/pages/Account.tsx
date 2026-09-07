@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { toast } from 'sonner';
 import { Loader2, TriangleAlert } from 'lucide-react';
 
@@ -94,124 +94,132 @@ const Account: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-heading font-light text-3xl tracking-tight text-foreground">Account</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage your profile, email, and password.</p>
+    <div className="mx-auto max-w-[1100px] px-6 py-16 md:py-20">
+      <div className="mb-12">
+        <p className="kicker mb-4">03 / Account</p>
+        <h1 className="text-3xl md:text-5xl font-heading font-medium tracking-tight text-foreground mb-2">Account</h1>
+        <p className="text-muted-foreground text-base font-sans">Manage your profile, email, and password.</p>
       </div>
 
-      <Card className="rounded-2xl border border-border bg-card/90 backdrop-blur-md shadow-xl">
-        <CardHeader className="text-left pb-2">
-          <CardTitle className="text-2xl font-heading font-medium tracking-tight text-foreground">Profile Details</CardTitle>
-          <CardDescription className="text-muted-foreground text-sm mt-1">Update your name, email, or password.</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4 py-3 text-left">
-            <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-xs uppercase tracking-wider font-semibold text-foreground/80">Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Your name"
-                {...register('name')}
-                disabled={isLoading}
-                className="rounded-lg h-10"
-              />
-              {errors.name && (
-                <p className="text-sm text-red-600 font-medium pl-2 border-l-2 border-red-600 mt-1">
-                  {errors.name.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs uppercase tracking-wider font-semibold text-foreground/80">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="developer@layerzero.ai"
-                {...register('email')}
-                disabled={isLoading}
-                className="rounded-lg h-10"
-              />
-              {errors.email && (
-                <p className="text-sm text-red-600 font-medium pl-2 border-l-2 border-red-600 mt-1">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
+      <div className="border-t border-border">
+        <Card className="border-0 shadow-none">
+          <CardHeader className="text-left px-0 pb-0 pt-8">
+            <CardTitle className="text-lg font-heading font-medium tracking-tight text-foreground">Profile Details</CardTitle>
+            <CardDescription className="text-muted-foreground text-sm mt-1">Update your name, email, or password.</CardDescription>
+          </CardHeader>
+          <CardContent className="px-0 py-4 text-left">
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 border-t border-border pt-8">
+                <div className="md:col-span-6">
+                  <Label htmlFor="name" className="font-mono text-[11px] uppercase tracking-[0.15em] text-foreground/70">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Your name"
+                    {...register('name')}
+                    disabled={isLoading}
+                    className="mt-2"
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-destructive font-medium pl-2 border-l-2 border-destructive mt-2">{errors.name.message}</p>
+                  )}
+                </div>
+                <div className="md:col-span-6">
+                  <Label htmlFor="email" className="font-mono text-[11px] uppercase tracking-[0.15em] text-foreground/70">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="developer@layerzero.ai"
+                    {...register('email')}
+                    disabled={isLoading}
+                    className="mt-2"
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-destructive font-medium pl-2 border-l-2 border-destructive mt-2">{errors.email.message}</p>
+                  )}
+                </div>
+              </div>
 
-            <div className="border-t border-border pt-4">
-              <p className="text-sm font-semibold text-foreground mb-1">Change Password</p>
-              <p className="text-xs text-muted-foreground mb-4">Enter your current password along with a new one.</p>
-              <div className="space-y-1.5">
-                <Label htmlFor="currentPassword" className="text-xs uppercase tracking-wider font-semibold text-foreground/80">Current Password</Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  {...register('currentPassword')}
-                  disabled={isLoading}
-                  className="rounded-lg h-10"
-                />
-                {errors.currentPassword && (
-                  <p className="text-sm text-red-600 font-medium pl-2 border-l-2 border-red-600 mt-1">
-                    {errors.currentPassword.message}
-                  </p>
-                )}
+              <div className="border-t border-border mt-8 pt-8">
+                <p className="text-sm font-medium text-foreground mb-1">Change Password</p>
+                <p className="text-xs text-muted-foreground font-sans mb-6">Enter your current password along with a new one.</p>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
+                  <div className="md:col-span-6">
+                    <Label htmlFor="currentPassword" className="font-mono text-[11px] uppercase tracking-[0.15em] text-foreground/70">Current Password</Label>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      {...register('currentPassword')}
+                      disabled={isLoading}
+                      className="mt-2"
+                    />
+                    {errors.currentPassword && (
+                      <p className="text-sm text-destructive font-medium pl-2 border-l-2 border-destructive mt-2">{errors.currentPassword.message}</p>
+                    )}
+                  </div>
+                  <div className="md:col-span-6">
+                    <Label htmlFor="newPassword" className="font-mono text-[11px] uppercase tracking-[0.15em] text-foreground/70">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      {...register('newPassword')}
+                      disabled={isLoading}
+                      className="mt-2"
+                    />
+                    {errors.newPassword && (
+                      <p className="text-sm text-destructive font-medium pl-2 border-l-2 border-destructive mt-2">{errors.newPassword.message}</p>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1.5 pt-3">
-                <Label htmlFor="newPassword" className="text-xs uppercase tracking-wider font-semibold text-foreground/80">New Password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  {...register('newPassword')}
-                  disabled={isLoading}
-                  className="rounded-lg h-10"
-                />
-                {errors.newPassword && (
-                  <p className="text-sm text-red-600 font-medium pl-2 border-l-2 border-red-600 mt-1">
-                    {errors.newPassword.message}
-                  </p>
-                )}
+
+              <div className="border-t border-border mt-8 pt-8 flex items-center">
+                <Button type="submit" className="h-10 px-6 font-medium" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Changes
+                </Button>
               </div>
-            </div>
+            </form>
           </CardContent>
-          <CardFooter className="flex items-center px-6 pb-6 md:px-8 md:pb-8 pt-2">
-            <Button type="submit" className="w-full sm:w-auto rounded-full bg-primary text-primary-foreground hover:opacity-90 h-10 font-medium" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+        </Card>
+      </div>
 
-      <Card className="rounded-2xl border border-red-600/30 bg-red-500/5 backdrop-blur-md">
-        <CardHeader className="text-left pb-2">
-          <CardTitle className="text-2xl font-heading font-medium tracking-tight text-red-600 dark:text-red-400 flex items-center gap-2">
-            <TriangleAlert className="h-5 w-5" />
-            Danger Zone
-          </CardTitle>
-          <CardDescription className="text-muted-foreground text-sm mt-1">
-            Permanently delete your account and all associated data. This action cannot be undone.
-          </CardDescription>
-        </CardHeader>
-        <CardFooter className="px-6 pb-6 md:px-8 md:pb-8 pt-2 flex items-center justify-between gap-4 flex-wrap">
-          <p className="text-sm text-muted-foreground">
-            {confirmDelete
-              ? "Are you sure? This will permanently remove your account. Click again to confirm."
-              : "Once you delete your account, there is no going back."}
-          </p>
-          <Button
-            variant="destructive"
-            className="rounded-full h-10 font-medium"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {confirmDelete ? "Click to Confirm" : "Delete Account"}
-          </Button>
-        </CardFooter>
+      <Card className="mt-12 rounded-[4px] border border-destructive/30 bg-destructive/5">
+        <div className="px-6 py-6 md:px-8">
+          <p className="kicker mb-6 text-destructive/70">03 / Danger Zone</p>
+
+          <div className="flex flex-col gap-y-2">
+            <div className="flex items-center justify-between gap-6 flex-wrap">
+              <h2 className="font-heading text-xl font-medium tracking-tight text-foreground flex items-center gap-2.5">
+                <TriangleAlert className="h-4 w-4 text-destructive" strokeWidth={1.5} />
+                Delete Account
+              </h2>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="h-9 px-4 rounded-[4px] border-destructive text-destructive bg-transparent hover:bg-destructive/10 hover:text-destructive font-mono text-[10px] uppercase tracking-[0.15em]"
+              >
+                {isDeleting && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+                {confirmDelete ? "Click to Confirm" : "Delete Account ↗"}
+              </Button>
+            </div>
+
+            <p className="text-sm text-muted-foreground font-sans leading-relaxed max-w-2xl">
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+
+            {confirmDelete && (
+              <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-destructive mt-1">
+                / Confirm deletion to proceed. This is permanent.
+              </p>
+            )}
+          </div>
+        </div>
       </Card>
     </div>
   );

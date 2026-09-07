@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
+import { Card } from '../components/ui/card';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
@@ -17,6 +17,13 @@ const loginSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
+
+const LOGIN_CAPABILITIES = [
+  "01 / URL EXTRACTION",
+  "02 / DOCUMENT PARSING",
+  "03 / FOUR-PROVIDER ROUTING",
+  "04 / PDF EXPORT",
+];
 
 const Login: React.FC = () => {
   const { login } = useAuth();
@@ -56,80 +63,77 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center p-6 py-16 md:py-24 bg-background min-h-[calc(100vh-4rem)] relative overflow-hidden">
-      <div className="gradient-orb gradient-orb-peach w-[350px] h-[350px] top-[10%] left-[10%] -z-0" />
-      <div className="gradient-orb gradient-orb-sky w-[350px] h-[350px] bottom-[10%] right-[10%] -z-0" />
+    <div className="flex flex-1 min-h-0 flex-col lg:items-center lg:justify-center bg-background px-6 py-10 md:py-12">
+      <Card className="w-full max-w-4xl rounded-[4px] border border-border bg-surface gridlines md:grid md:grid-cols-5">
+        {/* Identity panel */}
+        <div className="hidden md:flex flex-col justify-between p-10 border-r border-border col-span-2">
+          <div>
+            <p className="font-heading text-2xl font-medium tracking-tight text-foreground">layerzero</p>
+            <div className="rule my-6" />
+            <p className="kicker">01 / Sign In</p>
+            <p className="text-sm text-muted-foreground font-sans leading-relaxed mt-4">
+              Secure access to the control surface — extract, process, and summarize across four inference engines.
+            </p>
+          </div>
+          <div className="space-y-2.5">
+            {LOGIN_CAPABILITIES.map((cap) => (
+              <p key={cap} className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                {cap}
+              </p>
+            ))}
+          </div>
+          <div className="rule--tagged">
+            <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground">Hybrid Summarization</span>
+          </div>
+        </div>
 
-      <Card className="w-full max-w-md rounded-2xl border border-border bg-card/90 backdrop-blur-md relative z-10 shadow-xl">
-        <CardHeader className="text-left pb-2 px-6 pt-6 md:px-8 md:pt-8">
-          <CardTitle className="text-2xl font-heading font-medium tracking-tight text-foreground">Welcome back</CardTitle>
-          <CardDescription className="text-muted-foreground text-sm mt-1">Enter your credentials to access layerzero</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4 px-6 md:px-8 py-3 text-left">
+        {/* Form panel */}
+        <div className="col-span-3 p-8 md:p-10 flex flex-col justify-center bg-surface">
+          <p className="kicker md:hidden mb-3">01 / Sign In</p>
+          <h1 className="text-3xl font-heading font-medium tracking-tight text-foreground mb-1">Welcome back</h1>
+          <p className="text-muted-foreground text-sm font-sans mb-8">Enter your credentials to access layerzero</p>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-left">
             {unverifiedEmail && (
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3.5 text-xs text-amber-600 dark:text-amber-400 space-y-2">
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-[4px] p-3.5 text-xs text-amber-600 dark:text-amber-400 space-y-2">
                 <p className="font-semibold">Email Verification Required</p>
                 <p>Your email address is not verified yet. Please check your inbox or resend the verification link.</p>
-                <Link
-                  to="/resend-verification"
-                  state={{ email: unverifiedEmail }}
-                  className="inline-block font-bold underline hover:opacity-80"
-                >
+                <Link to="/resend-verification" state={{ email: unverifiedEmail }} className="inline-block font-bold underline hover:opacity-80">
                   Resend Verification Email →
                 </Link>
               </div>
             )}
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs uppercase tracking-wider font-semibold text-foreground/80">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="developer@layerzero.ai"
-                {...register('email')}
-                disabled={isLoading}
-                className="rounded-lg h-10"
-              />
+              <Label htmlFor="email" className="font-mono text-[11px] uppercase tracking-[0.15em] text-foreground/70">Email Address</Label>
+              <Input id="email" type="email" placeholder="developer@layerzero.ai" {...register('email')} disabled={isLoading} />
               {errors.email && (
-                <p className="text-sm text-red-600 font-medium pl-2 border-l-2 border-red-600 mt-1">
-                  {errors.email.message}
-                </p>
+                <p className="text-sm text-destructive font-medium pl-2 border-l-2 border-destructive mt-1">{errors.email.message}</p>
               )}
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-xs uppercase tracking-wider font-semibold text-foreground/80">Password</Label>
-                <Link to="/resend-verification" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">
-                  Resend email?
+                <Label htmlFor="password" className="font-mono text-[11px] uppercase tracking-[0.15em] text-foreground/70">Password</Label>
+                <Link to="/resend-verification" className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors">
+                  Forgot?
                 </Link>
               </div>
-              <Input
-                id="password"
-                type="password"
-                {...register('password')}
-                disabled={isLoading}
-                className="rounded-lg h-10"
-              />
+              <Input id="password" type="password" {...register('password')} disabled={isLoading} />
               {errors.password && (
-                <p className="text-sm text-red-600 font-medium pl-2 border-l-2 border-red-600 mt-1">
-                  {errors.password.message}
-                </p>
+                <p className="text-sm text-destructive font-medium pl-2 border-l-2 border-destructive mt-1">{errors.password.message}</p>
               )}
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-3 px-6 pb-6 md:px-8 md:pb-8 pt-2 text-center">
-            <Button type="submit" className="w-full rounded-full bg-primary text-primary-foreground hover:opacity-90 h-10 font-medium" disabled={isLoading}>
+            <Button type="submit" className="w-full h-10 font-medium mt-2" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
-            <div className="pt-1 text-center text-sm text-muted-foreground">
+            <div className="pt-1 text-center text-sm text-muted-foreground font-sans">
               Don't have an account?{" "}
-              <Link to="/register" className="text-foreground font-semibold hover:text-primary transition-colors hover:underline">
+              <Link to="/register" className="text-foreground font-medium hover:text-accent transition-colors hover:underline">
                 Create account →
               </Link>
             </div>
-          </CardFooter>
-        </form>
+          </form>
+        </div>
       </Card>
     </div>
   );

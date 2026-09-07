@@ -1,23 +1,34 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@import "@fontsource/geist-mono/400.css";
+@import "@fontsource/geist-mono/500.css";
+@import "@fontsource/geist-mono/600.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource-variable/eb-garamond";
+
 @theme {
   --font-sans: "Inter", sans-serif;
-  --font-heading: "EB Garamond", "Times New Roman", serif;
+  --font-heading: "EB Garamond Variable", "EB Garamond", "Times New Roman", serif;
   --font-mono: "Geist Mono", monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
 
-  --color-popover: var(--card);
-  --color-popover-foreground: var(--card-foreground);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--surface-foreground);
+
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--surface-foreground);
 
   --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--foreground);
+  --color-input: var(--border);
+  --color-ring: var(--accent);
 
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -28,89 +39,179 @@
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
 
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #ffffff;
-  
-  --radius: 9999px;
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --radius: 4px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
 }
 
 @layer base {
   :root {
-    --background: #f5f5f5;
-    --foreground: #09090b;
+    --background: #f4f4f2;
+    --foreground: #0d0d0f;
 
-    --card: #ffffff;
-    --card-foreground: #09090b;
+    --surface: #ffffff;
+    --surface-foreground: #0d0d0f;
 
-    --border: #e4e4e7;
-    --input: #d4d4d8;
+    --border: rgba(13, 13, 15, 0.14);
+    --input: rgba(13, 13, 15, 0.14);
 
-    --muted: #f4f4f5;
-    --muted-foreground: #71717a;
+    --muted: #ecece8;
+    --muted-foreground: #5c5c64;
 
-    --primary: #18181b;
-    --primary-foreground: #ffffff;
+    --primary: #0d0d0f;
+    --primary-foreground: #f4f4f2;
 
-    --secondary: #f4f4f5;
-    --secondary-foreground: #09090b;
+    --secondary: #ecece8;
+    --secondary-foreground: #0d0d0f;
 
-    --radius: 9999px;
+    --accent: #ff5c00;
+    --accent-foreground: #ffffff;
+
+    --destructive: #d03a2f;
+    --destructive-foreground: #ffffff;
+
+    --grid-line: rgba(13, 13, 15, 0.045);
   }
 
   .dark {
-    --background: #09090b;
-    --foreground: #f4f4f5;
+    --background: #0d0d0f;
+    --foreground: #f4f4f2;
 
-    --card: #18181b;
-    --card-foreground: #f4f4f5;
+    --surface: #141416;
+    --surface-foreground: #f4f4f2;
 
-    --border: #27272a;
-    --input: #3f3f46;
+    --border: rgba(255, 255, 255, 0.12);
+    --input: rgba(255, 255, 255, 0.12);
 
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
+    --muted: #1c1c1f;
+    --muted-foreground: #94949b;
 
-    --primary: #f4f4f5;
-    --primary-foreground: #09090b;
+    --primary: #f4f4f2;
+    --primary-foreground: #0d0d0f;
 
-    --secondary: #27272a;
-    --secondary-foreground: #f4f4f5;
+    --secondary: #1c1c1f;
+    --secondary-foreground: #f4f4f2;
+
+    --accent: #ff5c00;
+    --accent-foreground: #ffffff;
+
+    --destructive: #e5484d;
+    --destructive-foreground: #ffffff;
+
+    --grid-line: rgba(255, 255, 255, 0.05);
   }
 
   body {
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    letter-spacing: 0.01em;
+    font-size: 15px;
+    letter-spacing: -0.011em;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     transition: background-color 0.25s ease, color 0.25s ease;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    font-weight: 300;
-    letter-spacing: -0.02em;
+    font-weight: 500;
+    letter-spacing: -0.015em;
     color: var(--foreground);
   }
 }
 
-/* Sonner Toast Glassmorphism & Pill Styling */
+/* Section kicker: mono, tiny, wide-tracked metadata line */
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+/* Section rule: hairline with a mono tag pinned to the left edge */
+.rule {
+  width: 100%;
+  height: 1px;
+  background-color: var(--border);
+}
+
+.rule--tagged {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rule--tagged::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--border);
+}
+
+/* Faint ruled grid band (hero / key sections only) — drafting texture, not graph paper */
+.rules-band {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent calc(100% - 1px),
+      var(--grid-line) calc(100% - 1px),
+      var(--grid-line) 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent calc(100% - 1px),
+      var(--grid-line) calc(100% - 1px),
+      var(--grid-line) 100%
+    );
+  background-size: 64px 64px;
+}
+
+/* Blueprint gridlines for spec-sheet surfaces (auth cards) */
+.gridlines {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent calc(100% - 1px),
+      var(--border) calc(100% - 1px),
+      var(--border) 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent calc(100% - 1px),
+      var(--border) calc(100% - 1px),
+      var(--border) 100%
+    );
+  background-size: 28px 28px;
+}
+
+/* Sonner Toast: square, solid surface */
 [data-sonner-toast] {
   font-family: var(--font-sans) !important;
-  border-radius: 9999px !important;
-  background-color: var(--card) !important;
+  border-radius: 6px !important;
+  background-color: var(--surface) !important;
   color: var(--foreground) !important;
   border: 1px solid var(--border) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
-  padding: 12px 20px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12) !important;
+  padding: 12px 16px !important;
   font-size: 13px !important;
   font-weight: 500 !important;
 }
 
 .dark [data-sonner-toast] {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45) !important;
 }
 
 /* Prevent browser autofill from turning inputs blue or blacking text */
@@ -120,10 +221,10 @@ input:-webkit-autofill:focus,
 input:-webkit-autofill:active,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 1000px var(--card) inset !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset !important;
   -webkit-text-fill-color: var(--foreground) !important;
   caret-color: var(--foreground) !important;
-  border-color: var(--input) !important;
+  border-color: var(--border) !important;
   transition: background-color 50000s ease-in-out 0s;
 }
 
@@ -136,94 +237,26 @@ select:-webkit-autofill {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--input);
-  border-radius: 9999px;
+  background: var(--border);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
 
-/* Editorial Glass & Card Surface */
-.glass-surface {
-  background: rgba(245, 245, 245, 0.75) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  border-bottom: 1px solid var(--border) !important;
-  transition: background-color 0.25s ease, border-color 0.25s ease;
-}
-
-.dark .glass-surface {
-  background: rgba(9, 9, 11, 0.8) !important;
-}
-
-.editorial-card {
-  background-color: var(--card) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease, background-color 0.25s ease;
-}
-
-.dark .editorial-card {
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-}
-
-.editorial-card:hover {
-  border-color: var(--input);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-}
-
-.dark .editorial-card:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-}
-
-/* Signature Atmospheric Gradient Orbs */
-.gradient-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(65px);
-  pointer-events: none;
-  opacity: 0.65;
-  transition: opacity 0.3s ease;
-}
-
-.dark .gradient-orb {
-  opacity: 0.35;
-}
-
-.gradient-orb-mint {
-  background: radial-gradient(circle, #a7e5d3 0%, rgba(167, 229, 211, 0) 70%);
-}
-
-.gradient-orb-peach {
-  background: radial-gradient(circle, #f4c5a8 0%, rgba(244, 197, 168, 0) 70%);
-}
-
-.gradient-orb-lavender {
-  background: radial-gradient(circle, #c8b8e0 0%, rgba(200, 184, 224, 0) 70%);
-}
-
-.gradient-orb-sky {
-  background: radial-gradient(circle, #a8c8e8 0%, rgba(168, 200, 232, 0) 70%);
-}
-
-.gradient-orb-rose {
-  background: radial-gradient(circle, #e8b8c4 0%, rgba(232, 184, 196, 0) 70%);
-}
-
-/* Micro-animations */
-@keyframes badgePulse {
-  0%, 100% {
-    border-color: var(--border);
+/* Page fade-in */
+@keyframes blurFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
-  50% {
-    border-color: var(--input);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
-.animate-badge-pulse {
-  animation: badgePulse 3s infinite ease-in-out;
+.animate-blur-fade-in {
+  animation: blurFadeIn 0.35s ease-out;
 }
 
 /* Scroll Reveal */
@@ -259,7 +292,7 @@ select:-webkit-autofill {
 
 .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
   font-family: var(--font-heading) !important;
-  font-weight: 300 !important;
+  font-weight: 500 !important;
   color: var(--foreground) !important;
 }
 
