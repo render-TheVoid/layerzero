@@ -2,23 +2,21 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
-import { MailCheck, ArrowLeft, RefreshCw, CheckCircle } from 'lucide-react';
+import { MailCheck, ArrowLeft, RefreshCw } from 'lucide-react';
 
 const VerificationSent: React.FC = () => {
   const location = useLocation();
   const email = location.state?.email;
 
   return (
-    <div className="flex-1 flex items-center justify-center p-6 py-16 md:py-24 bg-background min-h-[calc(100vh-4rem)] relative overflow-hidden">
-      <div className="gradient-orb gradient-orb-mint w-[380px] h-[380px] top-[10%] left-[15%] -z-0 opacity-80" />
-      <div className="gradient-orb gradient-orb-lavender w-[380px] h-[380px] bottom-[10%] right-[15%] -z-0 opacity-80" />
-
-      <Card className="w-full max-w-lg rounded-2xl border-border bg-card/90 backdrop-blur-md relative z-10 p-4 md:p-6 text-center shadow-xl">
+    <div className="flex flex-1 min-h-0 flex-col lg:items-center lg:justify-center bg-background px-6 py-10 md:py-12">
+      <Card className="w-full max-w-lg rounded-[4px] border border-border bg-surface p-4 md:p-6 text-center">
         <CardHeader className="flex flex-col items-center pb-4">
-          <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 text-primary animate-pulse">
-            <MailCheck className="w-8 h-8" />
+          <div className="w-14 h-14 rounded-[4px] bg-secondary border border-border flex items-center justify-center mb-4 text-foreground">
+            <MailCheck className="w-6 h-6" />
           </div>
-          <CardTitle className="text-3xl font-heading font-light text-foreground">
+          <p className="kicker mb-3">Auth / Verification</p>
+          <CardTitle className="text-3xl font-heading font-medium tracking-tight text-foreground">
             Check your email
           </CardTitle>
           <CardDescription className="text-muted-foreground text-sm max-w-md mt-2">
@@ -28,37 +26,33 @@ const VerificationSent: React.FC = () => {
 
         <CardContent className="space-y-4">
           {email && (
-            <div className="bg-muted/50 border border-border/80 rounded-xl p-3.5 text-sm text-foreground flex items-center justify-center gap-2">
+            <div className="bg-secondary border border-border rounded-[4px] p-3.5 text-sm text-foreground flex items-center justify-center gap-2">
               <span className="text-muted-foreground">Sent to:</span>
-              <span className="font-semibold text-primary">{email}</span>
+              <span className="font-semibold text-foreground">{email}</span>
             </div>
           )}
 
-          <div className="text-xs text-muted-foreground bg-accent/40 rounded-xl p-4 text-left space-y-2">
-            <div className="font-semibold text-foreground flex items-center gap-1.5">
-              <CheckCircle className="w-4 h-4 text-primary" /> Next Steps:
-            </div>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-1">
-              <li>Open your email client and find the email from Layerzero.</li>
-              <li>Click the <strong>Verify Email</strong> button inside.</li>
-              <li>The link is valid for <strong>15 minutes</strong>.</li>
+          <div className="border-t border-border pt-4 text-left">
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground mb-2">Next Steps</div>
+            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground pl-1">
+              <li>Open your email client and find the message from Layerzero.</li>
+              <li>Click the <strong className="text-foreground">Verify Email</strong> button inside.</li>
+              <li>The link is valid for <strong className="text-foreground">15 minutes</strong>.</li>
             </ul>
           </div>
         </CardContent>
 
         <CardFooter className="flex flex-col space-y-3 pt-4">
           <Link to="/login" className="w-full">
-            <Button className="w-full rounded-full bg-primary text-primary-foreground hover:opacity-90">
-              Proceed to Sign In
-            </Button>
+            <Button className="w-full h-10 font-medium">Proceed to Sign In</Button>
           </Link>
 
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-1">
             <span>Didn't receive the email?</span>
-            <Link 
-              to="/resend-verification" 
+            <Link
+              to="/resend-verification"
               state={{ email }}
-              className="text-primary font-medium hover:underline inline-flex items-center gap-1"
+              className="text-foreground font-medium hover:text-accent transition-colors inline-flex items-center gap-1 hover:underline"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Resend Link
             </Link>

@@ -1,10 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import CustomCursor from './components/CustomCursor';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { MainLayout } from './layouts/MainLayout';
-import { DashboardLayout } from './layouts/DashboardLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 
@@ -24,7 +22,6 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <CustomCursor />
         <BrowserRouter>
           <Routes>
             <Route element={<MainLayout />}>
@@ -34,19 +31,18 @@ function App() {
               <Route path="/email-verified" element={<EmailVerified />} />
               <Route path="/verify-email/:token" element={<EmailVerified />} />
               <Route path="/token-expired" element={<TokenExpired />} />
+
               <Route element={<PublicRoute />}>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/resend-verification" element={<ResendVerification />} />
               </Route>
-            </Route>
-            
-            <Route path="/dashboard" element={<ProtectedRoute />}>
-              <Route element={<DashboardLayout />}>
-                <Route index element={<Navigate to="/dashboard/url" replace />} />
-                <Route path="url" element={<UrlSummarizer />} />
-                <Route path="doc" element={<DocSummarizer />} />
-                <Route path="account" element={<Account />} />
+
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<Navigate to="/dashboard/url" replace />} />
+                <Route path="/dashboard/url" element={<UrlSummarizer />} />
+                <Route path="/dashboard/doc" element={<DocSummarizer />} />
+                <Route path="/dashboard/account" element={<Account />} />
               </Route>
             </Route>
           </Routes>

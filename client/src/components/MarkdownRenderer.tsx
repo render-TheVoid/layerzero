@@ -12,7 +12,7 @@ interface MarkdownRendererProps {
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className }) => {
   return (
     <div className={cn(
-      "prose max-w-none text-foreground dark:prose-invert prose-headings:font-heading prose-headings:font-light prose-headings:text-foreground prose-strong:text-foreground prose-strong:font-semibold prose-b:text-foreground prose-p:text-muted-foreground prose-p:font-sans prose-li:text-muted-foreground prose-code:text-foreground prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:p-4 prose-pre:rounded-xl",
+      "prose max-w-none text-foreground dark:prose-invert prose-headings:font-heading prose-headings:font-medium prose-headings:text-foreground prose-strong:text-foreground prose-strong:font-semibold prose-b:text-foreground prose-p:text-muted-foreground prose-p:font-sans prose-li:text-muted-foreground prose-code:text-foreground prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:p-4 prose-pre:rounded-[4px]",
       className
     )}>
       <ReactMarkdown

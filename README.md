@@ -42,61 +42,53 @@ An AI-powered content summarization platform for PDFs, DOCX documents, and web l
 ## Technical Design Rationale (Why & How)
 
 ### Why Upstash Redis Caching?
-* **Why:** LLM API inference is expensive (~$0.01–$0.05 per long prompt) and slow (5–10 seconds per request). Re-summarizing identical documents or URLs wastes API quota and degrades user experience.
-* **Solution:** Layerzero implements an in-memory Upstash Redis cache layer (`@upstash/redis`). Before dispatching any prompt to an LLM provider, the backend checks Redis for a pre-existing summary.
-* **Impact:** Reduces response latency for previously summarized content from **~8.5s down to ~150ms (~98% speedup)** while consuming **0 LLM tokens**.
+* **Why:** LLM API inference is expensive (~$0.01–$0.05 per long prompt) and slow (5–10 seconds per request). Re-summarizing identical documents wastes API quota and degrades user experience.
+* **Solution:** Intercepts prompts using an in-memory Upstash Redis cache layer (`@upstash/redis`). Before dispatching any prompt, the backend checks Redis for a pre-existing summary.
+* **Impact:** Reduces latency for previously processed content from **~8.5s down to ~150ms (~98% speedup)** at **0 LLM token cost** (24h TTL).
 
 ### Why SHA-256 Content Fingerprinting?
-* **Why:** Matching cache entries by raw filename or URL is flawed—users rename files, re-upload duplicate documents, or submit identical text under different parameter strings.
-* **Solution:** Content is extracted first (via `pdfjs-dist`, `mammoth`, or `Mozilla Readability`), normalized, and hashed using SHA-256 (`crypto.createHash('sha256')`). The hex digest forms the Redis cache key (`summary:<SHA256_HASH>`).
-* **Impact:** Cache hits are tied to the *actual text content*, guaranteeing instant deduplicated lookup regardless of original filename, upload timestamp, or client metadata.
+* **Why:** Matching cache entries by raw filename or URL is flawed—users rename files, re-upload duplicate documents, or submit identical text under different query strings.
+* **Solution:** Content is extracted first (`pdfjs-dist`, `mammoth`, `Mozilla Readability`), normalized, and hashed using SHA-256 (`crypto.createHash('sha256')`). The hex digest forms the Redis cache key (`summary:<SHA256_HASH>`).
+* **Impact:** Guarantees cache hits based on *actual document content* regardless of filename, upload timestamp, or client metadata.
 
 ### Why Rate Limiting & Sliding Window Algorithm?
-* **Why Rate Limiting:** Unprotected LLM routes expose the application to runaway API billing, while auth routes invite credential-stuffing attacks and email spamming.
-* **Why Sliding Window:** Fixed-window limiters reset counters at hard minute boundaries, allowing double-burst traffic spikes (e.g., 30 requests at 12:00:59 + 30 requests at 12:01:01 = 60 requests in 2 seconds). The sliding window algorithm (`@upstash/ratelimit`) computes a moving weighted average across window segments to enforce continuous traffic smoothing.
-* **Configured Enforcements:**
-  * `authLimiter`: 20 requests / 10 minutes (`/api/auth/*`)
-  * `resendLimiter`: 3 requests / 24 hours (`/api/auth/user/resend`)
-  * `aiLimiter`: 30 requests / 15 minutes (`/api/scrape/*`)
+* **Why Rate Limiting:** Unprotected LLM routes expose the application to runaway API billing, while auth routes invite credential-stuffing and email resend spamming.
+* **Why Sliding Window:** Fixed-window limiters reset counters at hard time boundaries, allowing double-burst traffic spikes. `@upstash/ratelimit` computes a moving weighted average across sliding sub-windows to enforce continuous traffic smoothing.
+* **Limits:** `authLimiter` (20 req / 10m), `resendLimiter` (3 req / 24h), `aiLimiter` (30 req / 15m).
 
 ### Why Docker & Docker Compose?
-* **Why:** Running client, backend server, and Redis across host operating systems introduces Node runtime version drift, missing dependencies, and local networking friction. Connecting containerized backend apps to host-running local LLMs (Ollama) requires special network bridging.
-* **Solution:** Docker Compose orchestrates the React client, Express server, and Redis instances in containerized isolation. Server containers route local LLM requests to host Ollama using `host.docker.internal:11434`.
+* **Why:** Running client, backend server, and Redis across operating systems introduces runtime drift, missing dependencies, and local networking friction.
+* **Solution:** Docker Compose orchestrates client, server, and Redis in isolated containers. Server containers connect to host-running local LLMs (Ollama) via `host.docker.internal:11434`.
 
 ### Why Hybrid Multi-LLM Architecture?
-* **Why:** Cloud models offer large context scale but incur API costs and privacy concerns. Local models guarantee privacy and zero API fees but depend on client hardware. Indic language contexts require tailored prompt tokenization.
-* **Solution:** Users can dynamically select the model backend per request:
-  * **Gemini 3.5 Flash:** Cloud inference for large, complex documents.
-  * **GPT OSS 120B via Groq:** Ultra-low latency cloud inference.
-  * **Gemma 4 via Ollama:** Offline, privacy-first execution with zero API cost.
-  * **Sarvam 30B:** Tailored prompt and client for Hinglish and Indian multilingual context parsing.
+* **Why:** Cloud models offer large context scale but incur cost and privacy concerns. Local models run offline with zero API fees but depend on client hardware. Indic language contexts require tailored prompt tokenization.
+* **Solution:** Dynamic per-request selection between cloud models (**Gemini 3.5 Flash**, **Groq GPT-OSS 120B**), offline local models (**Gemma 4 via Ollama**), and Indic multilingual models (**Sarvam 30B**).
 
 ### Why Server-Sent Events (SSE) for Streaming?
 * **Why:** Waiting 8+ seconds for full LLM text generation creates poor perceived latency. WebSockets introduce unnecessary bidirectional state overhead for simple server-to-client token delivery.
-* **Solution:** Uses standard HTTP Server-Sent Events (`text/event-stream`). Tokens stream chunk-by-chunk directly to the UI, providing real-time feedback with native browser reconnection handling.
+* **Solution:** Uses HTTP Server-Sent Events (`text/event-stream`). Tokens stream chunk-by-chunk directly to the UI, providing real-time feedback with native browser reconnection handling.
 
 ### Why httpOnly JWT Cookies?
 * **Why:** Storing access tokens in browser `localStorage` exposes them to XSS (Cross-Site Scripting) token theft.
-* **Solution:** JWTs are issued inside `httpOnly` cookies with `SameSite=Lax` (`Secure` in production). JavaScript cannot read `httpOnly` cookies, shielding authentication tokens from malicious injected scripts.
+* **Solution:** Issued inside `httpOnly` cookies with `SameSite=Lax` (`Secure` in prod), preventing client-side JavaScript access and neutralizing XSS token theft vectors.
 
 ### Why Mozilla Readability + JSDOM for Scraping?
-* **Why:** Web pages contain heavy markup noise—navbars, footers, cookie banners, scripts, ads, and sidebars—which inflates LLM input token costs and dilutes summary quality.
+* **Why:** Web pages contain heavy markup noise—navbars, footers, cookie banners, scripts, ads, and sidebars—which inflates LLM token costs and dilutes summary quality.
 * **Solution:** `axios` fetches raw HTML, `JSDOM` constructs a Virtual DOM, and `@mozilla/readability` strips non-article elements to extract pure content text.
 
 ### Why In-Memory Document Parsing (`pdfjs-dist` & `mammoth`)?
-* **Why:** Relying on OS CLI tools (like `pdftotext` or `libreoffice`) inflates Docker image size, slows container builds, and introduces system vulnerability vectors.
+* **Why:** Relying on OS CLI tools (`pdftotext`, `libreoffice`) inflates Docker image size, slows container builds, and introduces system vulnerability vectors.
 * **Solution:** Parses PDFs (`pdfjs-dist`) and DOCX (`mammoth`) directly from `multer` memory buffers (`req.file.buffer`) in pure JavaScript memory.
 
 ---
 
 ## Detailed Technology Stack & Rationale
 
-| Layer / Domain | Technology | Operational Function | Why Used (Engineering Rationale) |
+| Layer | Technology | Operational Function | Why Used (Engineering Rationale) |
 |---|---|---|---|
-| **Frontend Framework** | React 18 | Declarative UI rendering & state management | Component reactivity, rich library ecosystem, and seamless SSE stream handling |
-| **Build Tool** | Vite | Client bundling & HMR server | Instant cold start and hot module reloading compared to legacy bundlers |
+| **Frontend Framework** | React 18 + Vite | Declarative UI & HMR build server | Component reactivity, rich library ecosystem, fast dev HMR, and seamless SSE stream handling |
 | **Frontend Language** | TypeScript | Static type safety | Prevents runtime bugs in API payload shapes, state hooks, and stream chunks |
-| **Styling System** | Tailwind CSS + shadcn/ui | Utility-first CSS & accessible components | Rapid, consistent UI design without CSS bundle bloat or runtime style overhead |
+| **Styling & UI** | Tailwind CSS + shadcn/ui | Utility-first CSS & accessible components | Rapid, consistent UI design without CSS bundle bloat or runtime style overhead |
 | **Document Export** | `jsPDF` | Client-side PDF file generation | Converts Markdown summaries to PDF directly in browser without backend rendering burden |
 | **Markdown Rendering** | `remark-gfm` + `rehype-raw` | Markdown parser & HTML sanitizer | Safely renders structured LLM markdown output (tables, lists, code blocks) in UI |
 | **Backend Runtime** | Node.js / Bun | Server-side JavaScript execution | Asynchronous event loop optimized for high-concurrency I/O and streaming |
@@ -107,11 +99,11 @@ An AI-powered content summarization platform for PDFs, DOCX documents, and web l
 | **Authentication** | `jsonwebtoken` + `bcrypt` | Signed JWTs & salted password hashing | Stateless session verification with secure password hash storage (`bcrypt` 10 rounds) |
 | **Input Validation** | Zod | Runtime schema validation | Enforces strict payload types before requests touch controllers or database drivers |
 | **Email Transport** | Nodemailer | Gmail SMTP client | Dispatches HTML email verification links with hex expiration tokens |
-| **Web Scraping** | Axios + JSDOM + `@mozilla/readability` | Web content fetcher & DOM parser | Isolates primary article text while discarding ads, navigation, and boilerplate HTML |
+| **Web Scraping** | Axios + JSDOM + Readability | Web content fetcher & DOM parser | Isolates primary article text while discarding ads, navigation, and boilerplate HTML |
 | **Document Parsers** | `pdfjs-dist` + `mammoth` | In-memory text extraction | Extracts clean raw text from PDF & DOCX binary buffers without OS binary dependencies |
 | **Streaming Protocol** | Server-Sent Events (`text/event-stream`) | Unidirectional HTTP streaming | Low-overhead real-time token streaming from server to client |
 | **Containerization** | Docker & Docker Compose | Container orchestration | Ensures 1:1 local and production environment parity across client, server, and Redis |
-| **Testing Suite** | Jest / Bun Test + Supertest + `mongodb-memory-server` | Integration & unit testing | Runs fast, isolated test suites against in-memory MongoDB without database side-effects |
+| **Testing Suite** | Bun Test + Supertest + `mongodb-memory-server` | Integration & unit testing | Runs fast, isolated test suites against in-memory MongoDB without database side-effects |
 
 ---
 
@@ -120,133 +112,67 @@ An AI-powered content summarization platform for PDFs, DOCX documents, and web l
 ### Health Check
 
 #### `GET /api/health`
-* **Access:** Public
-* **Rate Limit:** Unrestricted
-* **Under the Hood Execution:**
-  1. Computes runtime process uptime via `process.uptime()`.
-  2. Verifies backend HTTP service availability.
-  3. Returns `200 OK` with payload:
-     ```json
-     {
-       "status": "OK",
-       "message": "API is working properly",
-       "uptime": 184
-     }
-     ```
+* **Access:** Public | **Rate Limit:** Unrestricted
+* **Execution:** Checks backend service uptime via `process.uptime()` and returns `{ "status": "OK", "message": "API is working properly", "uptime": 184 }`.
 
 ---
 
 ### Authentication Routes (`/api/auth/user`)
 
 #### `POST /api/auth/user/register`
-* **Access:** Public
-* **Rate Limit:** `authLimiter` (20 requests / 10 minutes per IP)
-* **Request Body:** `{ "name": "...", "email": "...", "password": "..." }`
-* **Under the Hood Execution:**
-  1. **Validation:** Passes request body to Zod schema (`auth.validator.js`). Validates name (3–45 chars), valid email format, and password length (min 8 chars).
-  2. **Duplicate Check:** Queries MongoDB `User` model for existing account matching `email`. Returns `400 Bad Request` if user exists.
-  3. **Password Hashing:** Hashes plain password using `bcrypt` with 10 salt rounds.
-  4. **Verification Token Generation:** Generates a 32-byte hex token via `crypto.randomBytes(32)` and sets `verificationTokenExpires` to `Date.now() + 15 minutes`.
-  5. **User Creation:** Saves new user to MongoDB with `isVerified: false`.
-  6. **Email Dispatch:** Renders HTML verification email via `verificationEmail.js` containing link `${API_URL}/api/auth/user/verify/${token}` and sends via Nodemailer (Gmail SMTP).
-  7. **Response:** Returns `201 Created` with message `"You're registered, now verify email"`.
+* **Access:** Public | **Rate Limit:** `authLimiter` (20 req / 10m)
+* **Execution:**
+  1. Validates body via Zod (`auth.validator.js`).
+  2. Queries MongoDB `User` model for duplicate email.
+  3. Hashes password using `bcrypt` (10 salt rounds).
+  4. Generates a 32-byte hex verification token (`crypto.randomBytes(32)`) expiring in 15 minutes.
+  5. Saves user to MongoDB with `isVerified: false`.
+  6. Sends HTML verification email via Nodemailer (Gmail SMTP).
 
 #### `GET /api/auth/user/verify/:token`
-* **Access:** Public
-* **Rate Limit:** `authLimiter` (20 requests / 10 minutes per IP)
-* **URL Parameter:** `token` (32-byte hex string)
-* **Under the Hood Execution:**
-  1. **Token Lookup:** Queries MongoDB for user matching `verificationToken: token` where `verificationTokenExpires > Date.now()`.
-  2. **Expiration Check:** If no matching user or token expired, returns `400 Bad Request` (`"Invalid or expired verification token"`).
-  3. **Account Activation:** Updates `isVerified: true`, removes `verificationToken` and `verificationTokenExpires` fields, and saves updated document.
-  4. **Redirect:** Returns `302 Found` redirecting user's browser to `${CLIENT_URL}/email-verified`.
+* **Access:** Public | **Rate Limit:** `authLimiter` (20 req / 10m)
+* **Execution:** Queries MongoDB for matching active verification token. Sets `isVerified: true`, removes token fields, and redirects browser (`302 Found`) to `${CLIENT_URL}/email-verified`.
 
 #### `POST /api/auth/user/resend`
-* **Access:** Public
-* **Rate Limit:** `resendLimiter` (3 requests / 24 hours per email/IP)
-* **Request Body:** `{ "email": "..." }`
-* **Under the Hood Execution:**
-  1. **Validation:** Validates email format via Zod.
-  2. **User Lookup:** Queries MongoDB for `User` by email. Returns `404 Not Found` if missing.
-  3. **Verification Check:** If user is already verified (`isVerified === true`), returns `400 Bad Request` (`"User is already verified"`).
-  4. **Token Refresh:** Generates new hex verification token and 15-minute expiration timestamp. Saves user.
-  5. **Email Dispatch:** Sends updated verification link email via Nodemailer.
-  6. **Response:** Returns `200 OK` (`"Verification sent to your email successfully"`).
+* **Access:** Public | **Rate Limit:** `resendLimiter` (3 req / 24h)
+* **Execution:** Validates email via Zod. Checks if user is already verified (returns `400` if true). Generates new 15-minute token and dispatches email link via Nodemailer.
 
 #### `POST /api/auth/user/login`
-* **Access:** Public
-* **Rate Limit:** `authLimiter` (20 requests / 10 minutes per IP)
-* **Request Body:** `{ "email": "...", "password": "..." }`
-* **Under the Hood Execution:**
-  1. **Validation:** Validates credentials format via Zod.
-  2. **User Retrieval:** Queries MongoDB `User` model by email. Returns `400 Bad Request` if user not found.
-  3. **Password Comparison:** Compares plain password with stored bcrypt hash using `bcrypt.compare()`. Returns `400 Bad Request` if invalid.
-  4. **Verification Verification:** Checks `user.isVerified`. If `false`, returns `403 Forbidden` (`"Verify your email first"`).
-  5. **JWT Issuance:** Calls `generateJWT(res, user._id)`. Generates JWT signed with `JWT_SECRET` (7-day expiry) and attaches token as `jwt` cookie (`httpOnly: true`, `sameSite: 'lax'`, `maxAge: 7 days`).
-  6. **Response:** Returns `200 OK` with user JSON (`_id`, `name`, `email`).
+* **Access:** Public | **Rate Limit:** `authLimiter` (20 req / 10m)
+* **Execution:** Validates credentials via Zod → Compares password hash via `bcrypt.compare()` → Checks `isVerified === true` → Signs 7-day JWT containing `{ userId }` → Sets `jwt` cookie (`httpOnly: true`, `SameSite=Lax`). Returns user JSON.
 
 #### `POST /api/auth/user/logout`
-* **Access:** Public
-* **Rate Limit:** Unrestricted
-* **Under the Hood Execution:**
-  1. Clears `jwt` cookie by setting `res.cookie('jwt', '', { maxAge: 0 })`.
-  2. Returns `200 OK` (`"The user has been logged out successfully"`).
+* **Access:** Public | **Rate Limit:** Unrestricted
+* **Execution:** Clears `jwt` cookie (`maxAge: 0`) and returns `200 OK`.
 
 #### `GET /api/auth/user/check`
-* **Access:** Protected (JWT Cookie Required)
-* **Rate Limit:** `authLimiter` (20 requests / 10 minutes per IP)
-* **Under the Hood Execution:**
-  1. **Middleware Check (`protectRoute`):** Reads `req.cookies.jwt`. Returns `401 Unauthorized` if cookie is missing.
-  2. **Token Verification:** Verifies JWT signature using `jwt.verify(token, JWT_SECRET)`. Returns `401 Unauthorized` if expired or invalid.
-  3. **User Population:** Queries MongoDB `User.findById(decoded.userId).select('-password')`. Returns `404 Not Found` if user record was deleted.
-  4. **Context Attachment:** Attaches user object to `req.user`.
-  5. **Response:** Returns `200 OK` with active user profile.
+* **Access:** Protected (`protectRoute`) | **Rate Limit:** `authLimiter` (20 req / 10m)
+* **Execution:** `protectRoute` middleware verifies JWT cookie signature, populates `req.user` via `User.findById()`, and returns user profile.
 
 ---
 
 ### Content Ingestion & Summarization Routes (`/api/scrape`)
 
-All ingestion routes require a valid `jwt` httpOnly cookie and are enforced by `aiLimiter` (30 requests / 15 minutes).
-
 #### `POST /api/scrape/web`
-* **Access:** Protected (`protectRoute`)
-* **Rate Limit:** `aiLimiter` (30 requests / 15 minutes per user/IP)
+* **Access:** Protected (`protectRoute`) | **Rate Limit:** `aiLimiter` (30 req / 15m)
 * **Request Body:** `{ "url": "https://...", "client": "gemini", "stream": true }`
-  * `client` options: `"gemini"`, `"groq"`, `"gemma"`, `"sarvam"`
-  * `stream`: `boolean` (optional, defaults to `false`)
-* **Under the Hood Execution:**
-  1. **Schema Validation:** Validates URL syntax and supported AI client string via Zod (`summary.validator.js`).
-  2. **Web Scraping:** Uses `axios.get(url)` with custom browser `User-Agent` headers to fetch raw HTML.
-  3. **DOM Parsing & Extraction:** Initializes `JSDOM` with fetched HTML and passes DOM to `@mozilla/readability`. Extracts `article.textContent` (clean article text). If extraction fails, returns `400 Bad Request` (`"Could not extract article content"`).
-  4. **SHA-256 Hashing:** Computes hex digest `hashContent(articleText)`. Derives cache key `summary:<HASH>`.
-  5. **Redis Cache Lookup:** Queries Upstash Redis.
-     * **Cache Hit:** Immediately returns stored summary JSON (`{ "output": "..." }`) or streams cached summary via SSE (~150ms latency, 0 LLM tokens).
-     * **Cache Miss:** Continues to Model Routing.
-  6. **Model Routing:** Dispatches cleaned text to selected AI provider:
-     * `gemini`: Calls `@google/genai` SDK with model `gemini-3.5-flash`.
-     * `groq`: Calls `groq-sdk` with model `openai/gpt-oss-120b`.
-     * `gemma`: Calls local Ollama endpoint `POST http://localhost:11434/api/chat` via `fetch`.
-     * `sarvam`: Calls `sarvamai` SDK with Hinglish system prompt (`sarvamSystemPrompt.js`).
-  7. **Response Delivery:**
-     * **Standard (`stream: false`):** Awaits complete model completion, caches summary string in Redis (24h TTL), and returns `200 OK` `{ "output": "..." }`.
-     * **Streaming (`stream: true`):** Sets headers `Content-Type: text/event-stream`, `Cache-Control: no-cache`. Streams tokens as SSE chunks (`event: chunk`, `data: {"delta":"..."}`). Accumulates tokens and caches final text in Redis upon completion (`event: done`).
+* **Execution:**
+  1. Validates URL and AI client (`gemini`, `groq`, `gemma`, `sarvam`) via Zod (`summary.validator.js`).
+  2. Fetches raw HTML via `axios.get(url)` with browser User-Agent headers.
+  3. Loads HTML into `JSDOM` and extracts clean `article.textContent` via `@mozilla/readability`.
+  4. Hashes text using SHA-256 (`crypto.createHash('sha256')`) to form key `summary:<HASH>`.
+  5. Queries Upstash Redis cache. On hit, returns cached summary (~150ms). On miss, routes text to selected AI provider SDK.
+  6. **Streaming (`stream: true`):** Sends `Content-Type: text/event-stream`. Streams chunks (`event: chunk`) as generated and caches final summary in Redis (24h TTL) on completion (`event: done`).
 
 #### `POST /api/scrape/doc`
-* **Access:** Protected (`protectRoute`)
-* **Rate Limit:** `aiLimiter` (30 requests / 15 minutes per user/IP)
-* **Request Format:** `multipart/form-data`
-  * `document`: File upload (PDF or DOCX, max 5MB)
-  * `client`: String (`"gemini"`, `"groq"`, `"gemma"`, `"sarvam"`)
-  * `stream`: String/Boolean (`"true"` or `true` optional)
-* **Under the Hood Execution:**
-  1. **File Interception:** `multer.single('document')` intercepts request and loads file buffer into `req.file.buffer` (memory storage). Returns `400 Bad Request` if missing file or >5MB limit.
-  2. **Mimetype Document Parsing (`document.js` service):**
-     * `application/pdf`: Passes buffer to `pdfparse.js` (`pdfjs-dist`). Extracts text content page by page.
-     * `application/vnd.openxmlformats-officedocument.wordprocessingml.document` (DOCX): Passes buffer to `docxparse.js` (`mammoth`). Extracts raw text string.
-  3. **SHA-256 Hashing:** Normalizes text and generates hex hash `hashContent(extractedText)`. Formats Redis key `summary:<HASH>`.
-  4. **Redis Cache Lookup:** Checks Upstash Redis for existing key. Returns cached summary instantly on hit.
-  5. **Model Routing & Execution:** Dispatches text to selected model wrapper (`gemini`, `groq`, `gemma`, or `sarvam`).
-  6. **Response & Caching:** Streams tokens via SSE (`stream: true`) or returns JSON summary (`{ "summary": "..." }`), saving the result to Redis with 24-hour TTL.
+* **Access:** Protected (`protectRoute`) | **Rate Limit:** `aiLimiter` (30 req / 15m)
+* **Request Format:** `multipart/form-data` (`document` file, `client`, `stream`)
+* **Execution:**
+  1. `multer` loads file buffer into memory (`req.file.buffer`, max 5MB).
+  2. Mimetype router (`document.js`) parses PDF via `pdfjs-dist` or DOCX via `mammoth`.
+  3. Hashes raw text string using SHA-256 (`hashContent`) and queries Redis cache key `summary:<HASH>`.
+  4. On cache miss, routes text to selected model wrapper (`gemini`, `groq`, `gemma`, `sarvam`).
+  5. Streams tokens via SSE (`stream: true`) or returns JSON summary, caching output in Redis (24h TTL).
 
 ---
 
@@ -295,54 +221,32 @@ All ingestion routes require a valid `jwt` httpOnly cookie and are enforced by `
                  Store in Redis (24h TTL)
 ```
 
-
-
-## Quick Startup (Docker)
-
-Launch client, server, and Redis in containerized environment:
-
-```bash
-./start.sh
-```
-
-Or manually using Docker Compose:
-
-```bash
-docker compose up --build -d
-```
-
-> **Note for Gemma (Local LLM):** Ensure Ollama is running on your host machine (`ollama serve`). The server container connects to Ollama via `OLLAMA_BASE_URL=http://host.docker.internal:11434`.
-
 ---
 
-## Running Backend Tests
+## Quick Startup & Local Development
 
+### Quickstart (Docker)
+```bash
+./start.sh   # Or: docker compose up --build -d
+```
+> **Local LLM:** Ensure Ollama is running (`ollama serve`). Server connects via `OLLAMA_BASE_URL=http://host.docker.internal:11434`.
+
+### Running Backend Tests
 ```bash
 cd server
 bun test
 ```
+Runs integration tests against an isolated `mongodb-memory-server` database instance.
 
-Runs integration tests for auth, health check, and rate limiters against an isolated in-memory MongoDB database (`mongodb-memory-server`).
-
----
-
-## Local Development (Without Docker)
-
-1. **Clone repository:**
-   ```bash
-   git clone https://github.com/render-TheVoid/layerzero.git
-   cd layerzero
-   ```
-
-2. **Backend setup:**
+### Local Development (Without Docker)
+1. **Backend:**
    ```bash
    cd server
    bun install
    cp .env.example .env
    bun dev
    ```
-
-3. **Frontend setup:**
+2. **Frontend:**
    ```bash
    cd client
    npm install
@@ -378,9 +282,9 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
 
 ## Current Limitations & Roadmap
 
-* **Single Document Focus:** Currently processes one document or URL per request. Multi-document batch processing planned.
-* **Persistent History:** Summaries currently persist in Redis cache (24h TTL) but are not yet saved to user accounts permanently.
-* **Background Queues:** Future updates will integrate worker queues (e.g. BullMQ) for asynchronous long-document parsing.
+* **Single Document Focus:** Processes one document or URL per request. Multi-document batch processing planned.
+* **Persistent History:** Summaries persist in Redis cache (24h TTL) but are not yet saved to user accounts permanently.
+* **Background Queues:** Future updates will integrate worker queues (BullMQ) for asynchronous long-document parsing.
 
 ---
 
